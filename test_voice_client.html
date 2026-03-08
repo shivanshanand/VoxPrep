@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Interview Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-primary: #0a0e17;
+        --bg-secondary: #12161f;
+        --bg-glass: rgba(18, 22, 31, 0.6);
+        --accent-primary: #00f0ff;
+        --accent-glow: rgba(0, 240, 255, 0.3);
+        --accent-secondary: #ff006e;
+        --text-primary: #e8ecf4;
+        --text-muted: #8892a6;
+        --surface: #1a1f2e;
+        --surface-elevated: #242936;
+        --border: rgba(232, 236, 244, 0.1);
+        --success: #00ff88;
+        --warning: #ffaa00;
+      }
+
+      body {
+        font-family: "JetBrains Mono", monospace;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        overflow-x: hidden;
+        min-height: 100vh;
+        position: relative;
+      }
+
+      /* Animated background */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            circle at 20% 50%,
+            rgba(0, 240, 255, 0.08) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(255, 0, 110, 0.08) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+        animation: bgPulse 8s ease-in-out infinite;
+      }
+
+      @keyframes bgPulse {
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 60px 30px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        margin-bottom: 60px;
+        animation: fadeInDown 0.8s ease-out;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h1 {
+        font-family: "Syne", sans-serif;
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 800;
+        background: linear-gradient(
+          135deg,
+          var(--accent-primary) 0%,
+          var(--accent-secondary) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 12px;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+      }
+
+      .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        font-weight: 400;
+        letter-spacing: 0.02em;
+      }
+
+      /* Card/Panel */
+      .panel {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.8s ease-out 0.2s backwards;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--accent-primary),
+          transparent
+        );
+        opacity: 0.5;
+      }
+
+      /* Loading Overlay */
+      .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 14, 23, 0.95);
+        backdrop-filter: blur(10px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        flex-direction: column;
+      }
+
+      .loading-overlay.active {
+        display: flex;
+      }
+
+      .spinner {
+        width: 80px;
+        height: 80px;
+        border: 3px solid var(--surface);
+        border-top: 3px solid var(--accent-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 30px;
+        box-shadow: 0 0 30px var(--accent-glow);
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #loadingText {
+        font-size: 1rem;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+      }
+
+      /* Form Elements */
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent-primary);
+        font-weight: 600;
+      }
+
+      select {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2300f0ff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 20px center;
+        padding-right: 50px;
+      }
+
+      select:hover {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 20px var(--accent-glow);
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 20px var(--accent-glow);
+      }
+
+      /* Buttons */
+      button {
+        background: linear-gradient(
+          135deg,
+          var(--accent-primary),
+          var(--accent-secondary)
+        );
+        border: none;
+        color: var(--bg-primary);
+        padding: 18px 36px;
+        font-family: "Syne", sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        position: relative;
+        overflow: hidden;
+      }
+
+      button::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.6s,
+          height 0.6s;
+      }
+
+      button:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px var(--accent-glow);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      button span {
+        position: relative;
+        z-index: 1;
+      }
+
+      #recordBtn {
+        width: 100%;
+        margin: 20px 0;
+        background: linear-gradient(135deg, #0066ff, var(--accent-primary));
+      }
+
+      #recordBtn.recording {
+        background: linear-gradient(135deg, var(--accent-secondary), #ff4400);
+        animation: recordPulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes recordPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 0, 110, 0.7);
+        }
+        50% {
+          box-shadow: 0 0 0 20px rgba(255, 0, 110, 0);
+        }
+      }
+
+      #stopBtn {
+        background: linear-gradient(135deg, var(--warning), #ff6600);
+      }
+
+      /* Phase Indicator */
+      .phase-indicator {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 30px 0;
+      }
+
+      .phase {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 12px;
+        text-align: center;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        color: var(--text-muted);
+        position: relative;
+        transition: all 0.4s ease;
+      }
+
+      .phase::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: transparent;
+        border-radius: 10px 10px 0 0;
+        transition: all 0.4s ease;
+      }
+
+      .phase.active {
+        background: var(--surface-elevated);
+        border-color: var(--accent-primary);
+        color: var(--accent-primary);
+        box-shadow: 0 0 20px var(--accent-glow);
+      }
+
+      .phase.active::before {
+        background: linear-gradient(
+          90deg,
+          var(--accent-primary),
+          var(--accent-secondary)
+        );
+      }
+
+      /* Status */
+      #status {
+        margin: 20px 0;
+        padding: 16px 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--accent-primary);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        letter-spacing: 0.02em;
+      }
+
+      /* Transcript */
+      #transcript {
+        margin-top: 30px;
+        padding: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        min-height: 300px;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      #transcript::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      #transcript::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 4px;
+      }
+
+      #transcript::-webkit-scrollbar-thumb {
+        background: var(--accent-primary);
+        border-radius: 4px;
+      }
+
+      .message {
+        margin: 16px 0;
+        padding: 16px 20px;
+        border-radius: 12px;
+        animation: messageSlide 0.4s ease-out;
+        position: relative;
+        border: 1px solid transparent;
+      }
+
+      @keyframes messageSlide {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .message::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 60%;
+        border-radius: 2px;
+      }
+
+      .user {
+        background: rgba(0, 102, 255, 0.1);
+        border-color: rgba(0, 102, 255, 0.3);
+        margin-left: 15%;
+      }
+
+      .user::before {
+        background: #0066ff;
+      }
+
+      .ai {
+        background: rgba(0, 240, 255, 0.1);
+        border-color: rgba(0, 240, 255, 0.3);
+        margin-right: 15%;
+      }
+
+      .ai::before {
+        background: var(--accent-primary);
+      }
+
+      .message-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        margin-bottom: 8px;
+        opacity: 0.7;
+      }
+
+      .message-content {
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      /* Summary Screen */
+      .summary-screen {
+        display: none;
+        text-align: center;
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      .summary-screen.active {
+        display: block;
+      }
+
+      .summary-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        animation: bounce 1s ease-in-out;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      .summary-title {
+        font-family: "Syne", sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        background: linear-gradient(
+          135deg,
+          var(--success),
+          var(--accent-primary)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      #finalScore {
+        font-size: 4rem;
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        color: var(--accent-primary);
+        margin: 30px 0;
+        text-shadow: 0 0 40px var(--accent-glow);
+      }
+
+      .score-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        margin-bottom: 10px;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .container {
+          padding: 40px 20px;
+        }
+
+        .panel {
+          padding: 30px 20px;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .phase-indicator {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        .user,
+        .ai {
+          margin-left: 0;
+          margin-right: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p id="loadingText">INITIALIZING INTERVIEW AGENT...</p>
+    </div>
+
+    <div class="container">
+      <div class="header">
+        <h1>AI INTERVIEW STUDIO</h1>
+        <p class="subtitle">Next-Generation Technical Interview Practice</p>
+      </div>
+
+      <!-- Setup Screen -->
+      <div id="setupScreen" class="panel">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="roleSelect">SELECT ROLE</label>
+            <select id="roleSelect">
+              <option value="BACKEND">Backend Developer</option>
+              <option value="FRONTEND">Frontend Developer</option>
+              <option value="FULLSTACK">Full-Stack Developer</option>
+              <option value="ML_ENGINEER">ML Engineer</option>
+              <option value="DEVOPS">DevOps Engineer</option>
+              <option value="DATA_SCIENTIST">Data Scientist</option>
+              <option value="MOBILE">Mobile Developer</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="experienceSelect">EXPERIENCE LEVEL</label>
+            <select id="experienceSelect">
+              <option value="INTERN">Intern</option>
+              <option value="JUNIOR">Junior (0-2 years)</option>
+              <option value="MID">Mid-level (2-5 years)</option>
+              <option value="SENIOR">Senior (5+ years)</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="beginBtn">
+          <span>BEGIN INTERVIEW →</span>
+        </button>
+      </div>
+
+      <!-- Interview Screen -->
+      <div id="interviewScreen" class="panel" style="display: none">
+        <div class="phase-indicator">
+          <div class="phase" data-phase="introduction">Introduction</div>
+          <div class="phase" data-phase="technical">Technical</div>
+          <div class="phase" data-phase="behavioral">Behavioral</div>
+          <div class="phase" data-phase="closing">Closing</div>
+        </div>
+
+        <button id="recordBtn" disabled>
+          <span>🎙 START SPEAKING</span>
+        </button>
+        <button id="stopBtn" disabled>
+          <span>⏹ END INTERVIEW</span>
+        </button>
+
+        <div id="status">STATUS: Connecting to interview agent...</div>
+        <div id="transcript"></div>
+      </div>
+
+      <!-- Summary Screen -->
+      <div id="summaryScreen" class="panel summary-screen">
+        <div class="summary-icon">🎉</div>
+        <h2 class="summary-title">Interview Complete</h2>
+        <div class="score-label">YOUR PERFORMANCE SCORE</div>
+        <div id="finalScore">-</div>
+        <button onclick="location.reload()">
+          <span>START NEW INTERVIEW</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let ws;
+      let mediaRecorder;
+      let audioChunks = [];
+      let isRecording = false;
+      let interviewEnded = false;
+      let currentPhase = "introduction";
+
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      const loadingText = document.getElementById("loadingText");
+      const setupScreen = document.getElementById("setupScreen");
+      const interviewScreen = document.getElementById("interviewScreen");
+      const summaryScreen = document.getElementById("summaryScreen");
+      const transcript = document.getElementById("transcript");
+      const recordBtn = document.getElementById("recordBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const beginBtn = document.getElementById("beginBtn");
+      const roleSelect = document.getElementById("roleSelect");
+      const experienceSelect = document.getElementById("experienceSelect");
+
+      function showLoading(text) {
+        loadingText.textContent = text.toUpperCase();
+        loadingOverlay.classList.add("active");
+      }
+
+      function hideLoading() {
+        loadingOverlay.classList.remove("active");
+      }
+
+      function updateStatus(msg) {
+        document.getElementById("status").textContent = "STATUS: " + msg;
+      }
+
+      function updatePhase(phase) {
+        currentPhase = phase;
+        document.querySelectorAll(".phase").forEach((el) => {
+          el.classList.remove("active");
+          if (el.dataset.phase === phase) {
+            el.classList.add("active");
+          }
+        });
+      }
+
+      function addMessage(text, isUser) {
+        const div = document.createElement("div");
+        div.className = "message " + (isUser ? "user" : "ai");
+
+        const label = document.createElement("div");
+        label.className = "message-label";
+        label.textContent = isUser ? "YOU" : "AI INTERVIEWER";
+
+        const content = document.createElement("div");
+        content.className = "message-content";
+        content.textContent = text;
+
+        div.appendChild(label);
+        div.appendChild(content);
+        transcript.appendChild(div);
+        transcript.scrollTop = transcript.scrollHeight;
+      }
+
+      beginBtn.addEventListener("click", async () => {
+        showLoading("Connecting to AI interviewer...");
+        setupScreen.style.display = "none";
+        interviewScreen.style.display = "block";
+
+        const wsUrl = `ws://localhost:8000/ws/voice/${roleSelect.value}/${experienceSelect.value}`;
+        console.log("Connecting to:", wsUrl);
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log("WebSocket connected");
+          showLoading("Preparing your first question...");
+          updatePhase("introduction");
+        };
+
+        ws.onmessage = async (event) => {
+          const data = JSON.parse(event.data);
+          console.log("Received:", data);
+
+          if (data.type === "session_start") {
+            console.log("Session started:", data.session_id);
+          }
+
+          if (data.type === "audio") {
+            hideLoading();
+            recordBtn.disabled = true;
+            addMessage(data.text, false);
+
+            // Update phase if provided
+            if (data.phase) {
+              updatePhase(data.phase);
+            }
+
+            const audioBlob = new Blob(
+              [Uint8Array.from(atob(data.data), (c) => c.charCodeAt(0))],
+              { type: "audio/wav" },
+            );
+
+            const audio = new Audio(URL.createObjectURL(audioBlob));
+            audio.onended = () => {
+              if (!interviewEnded) {
+                recordBtn.disabled = false;
+                updateStatus("Ready - Click to speak");
+              }
+            };
+            audio.play();
+          }
+
+          if (data.type === "transcription") {
+            addMessage(data.text, true);
+          }
+
+          if (data.type === "summary") {
+            interviewEnded = true;
+            interviewScreen.style.display = "none";
+            summaryScreen.classList.add("active");
+
+            const score = data.data.overall_score || 0;
+            document.getElementById("finalScore").textContent = score + "/10";
+
+            console.log("Interview summary:", data.data);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          hideLoading();
+          updateStatus("Connection error - please refresh");
+        };
+
+        ws.onclose = () => {
+          console.log("WebSocket closed");
+          if (!interviewEnded) {
+            hideLoading();
+            updateStatus("Connection closed");
+          }
+        };
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+
+          mediaRecorder = new MediaRecorder(stream);
+
+          mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(audioChunks, { type: "audio/wav" });
+            audioChunks = [];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                  JSON.stringify({
+                    type: "audio",
+                    data: reader.result.split(",")[1],
+                  }),
+                );
+                updateStatus("Processing your answer...");
+              }
+            };
+            reader.readAsDataURL(blob);
+          };
+
+          updateStatus("Connected - Waiting for first question");
+        } catch (error) {
+          console.error("Microphone access error:", error);
+          hideLoading();
+          updateStatus("Microphone access denied");
+        }
+      });
+
+      recordBtn.addEventListener("click", () => {
+        if (interviewEnded) return;
+
+        if (!isRecording) {
+          audioChunks = [];
+          mediaRecorder.start();
+          recordBtn.classList.add("recording");
+          recordBtn.innerHTML = "<span>⏹ STOP SPEAKING</span>";
+          isRecording = true;
+          updateStatus("Recording your answer...");
+        } else {
+          mediaRecorder.stop();
+          recordBtn.classList.remove("recording");
+          recordBtn.innerHTML = "<span>🎙 START SPEAKING</span>";
+          isRecording = false;
+        }
+      });
+
+      stopBtn.addEventListener("click", () => {
+        if (interviewEnded) return;
+
+        if (confirm("Are you sure you want to end the interview?")) {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "end" }));
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
