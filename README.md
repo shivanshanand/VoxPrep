@@ -184,7 +184,7 @@ VoxPrep follows a microservices-style architecture with clear separation of conc
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/VoxPrep.git
+git clone https://github.com/shivanshanand/VoxPrep.git
 cd VoxPrep
 ```
 
