@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import Type, TypeVar
+from typing import TypeVar
 
 E = TypeVar("E", bound=Enum)
 
@@ -8,7 +8,7 @@ def normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def parse_enum(enum_cls: Type[E], raw: str) -> E:
+def parse_enum(enum_cls: type[E], raw: str) -> E:
     raw_norm = normalize(raw)
 
     for member in enum_cls:

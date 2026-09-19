@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     # API Keys
     ASSEMBLYAI_API_KEY: str
@@ -8,6 +9,7 @@ class Settings(BaseSettings):
     QDRANT_URL: str
 
     # App Settings
+    GROQ_MODEL: str = "groq/compound-mini"
     APP_NAME: str = "Voice Interview Agent"
     DEBUG: bool = True
 

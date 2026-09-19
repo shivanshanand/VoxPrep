@@ -1,11 +1,18 @@
+import json
+import uuid
+from datetime import datetime
+
 from app.models.interview import (
-    InterviewSession, InterviewConfig, InterviewPhase, 
-    Message, AnswerEvaluation, RoleType, ExperienceLevel
+    AnswerEvaluation,
+    ExperienceLevel,
+    InterviewConfig,
+    InterviewPhase,
+    InterviewSession,
+    Message,
+    RoleType,
 )
 from app.services.llm_service import llm_service
-from datetime import datetime
-import uuid
-import json
+
 
 class InterviewService:
     def __init__(self):
@@ -265,16 +272,13 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text):
 }}
 """
         
-        eval_response = await llm_service.chat(answer, eval_prompt)
+        eval_response = await llm_service.raw_completion(eval_prompt)
         
         # Clean the response (remove markdown code blocks if present)
         eval_response = eval_response.strip()
-        if eval_response.startswith("```json"):
-            eval_response = eval_response[7:]
-        if eval_response.startswith("```"):
-            eval_response = eval_response[3:]
-        if eval_response.endswith("```"):
-            eval_response = eval_response[:-3]
+        eval_response = eval_response.removeprefix("```json")
+        eval_response = eval_response.removeprefix("```")
+        eval_response = eval_response.removesuffix("```")
         eval_response = eval_response.strip()
         
         # Parse JSON response

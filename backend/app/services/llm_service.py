@@ -1,12 +1,14 @@
-from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_groq import ChatGroq
+
 from app.config import settings
+
 
 class LLMService:
     def __init__(self):
         self.llm = ChatGroq(
             api_key=settings.GROQ_API_KEY,
-            model="llama-3.3-70b-versatile",
+            model=settings.GROQ_MODEL,
             temperature=0.7
         )
     
@@ -27,6 +29,11 @@ class LLMService:
             "user_message": user_message
         })
         
+        return response.content
+
+    async def raw_completion(self, prompt: str) -> str:
+        """Direct completion without chat wrapper template"""
+        response = await self.llm.ainvoke(prompt)
         return response.content
 
 llm_service = LLMService()

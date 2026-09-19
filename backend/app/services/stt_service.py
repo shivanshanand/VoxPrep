@@ -1,5 +1,7 @@
 import assemblyai as aai
+
 from app.config import settings
+
 
 class STTService:
     def __init__(self):
