@@ -1,7 +1,7 @@
-from pydantic import BaseModel
-from typing import List, Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+
+from pydantic import BaseModel
 
 
 class RoleType(str, Enum):
@@ -39,9 +39,9 @@ class InterviewConfig(BaseModel):
     session_id: str
     role: RoleType
     experience: ExperienceLevel
-    focus_areas: List[FocusArea] = []
+    focus_areas: list[FocusArea] = []
     duration_minutes: int = 30
-    candidate_name: Optional[str] = None
+    candidate_name: str | None = None
     created_at: str = datetime.now().isoformat()
 
 
@@ -50,7 +50,7 @@ class Question(BaseModel):
     text: str
     category: FocusArea
     difficulty: str
-    expected_points: List[str]
+    expected_points: list[str]
 
 
 class Message(BaseModel):
@@ -65,8 +65,8 @@ class AnswerEvaluation(BaseModel):
     answer: str
     score: int  # 1-10
     feedback: str
-    strengths: List[str]
-    improvements: List[str]
+    strengths: list[str]
+    improvements: list[str]
     timestamp: str
 
 
@@ -74,10 +74,10 @@ class InterviewSession(BaseModel):
     session_id: str
     config: InterviewConfig
     current_phase: InterviewPhase
-    questions: List[Question] = []
+    questions: list[Question] = []
     current_question_index: int = 0
-    messages: List[Message] = []
-    evaluations: List[AnswerEvaluation] = []
+    messages: list[Message] = []
+    evaluations: list[AnswerEvaluation] = []
     start_time: str
-    end_time: Optional[str] = None
-    overall_score: Optional[float] = None
+    end_time: str | None = None
+    overall_score: float | None = None

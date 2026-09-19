@@ -1,7 +1,8 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, Text, Float, Integer, JSON, DateTime
 from datetime import datetime
+
+from sqlalchemy import JSON, Column, DateTime, Float, Integer, String
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base
 
 # Database URL
 DATABASE_URL = "sqlite+aiosqlite:///./interviews.db"
@@ -27,6 +28,13 @@ class InterviewSessionDB(Base):
     end_time = Column(DateTime, nullable=True)
     overall_score = Column(Float, nullable=True)
 
+class RateLimitDB(Base):
+    __tablename__ = "rate_limits"
+    
+    ip_address = Column(String, primary_key=True, index=True)
+    usage_count = Column(Integer, default=0)
+    reset_time = Column(DateTime)
+
 # Initialize database
 async def init_db():
     async with engine.begin() as conn:
@@ -51,3 +59,19 @@ async def update_session(session_id: str, updates: dict):
             for key, value in updates.items():
                 setattr(session, key, value)
             await db.commit()
+
+async def get_rate_limit(ip_address: str):
+    async with async_session() as db:
+        result = await db.get(RateLimitDB, ip_address)
+        return result
+
+async def save_rate_limit(rate_limit_data: dict):
+    async with async_session() as db:
+        rate_limit = await db.get(RateLimitDB, rate_limit_data["ip_address"])
+        if rate_limit:
+            for key, value in rate_limit_data.items():
+                setattr(rate_limit, key, value)
+        else:
+            rate_limit = RateLimitDB(**rate_limit_data)
+            db.add(rate_limit)
+        await db.commit()

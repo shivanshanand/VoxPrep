@@ -1,13 +1,16 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.services.stt_service import stt_service
-from app.services.tts_service import tts_service
-from app.services.interview_service import interview_service
-from app.models.interview import RoleType, ExperienceLevel
-from app.utils.enum_parser import parse_enum
 import base64
-import json
 import os
 import tempfile
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from app.database import get_rate_limit, save_rate_limit
+from app.models.interview import ExperienceLevel, RoleType
+from app.services.interview_service import interview_service
+from app.services.stt_service import stt_service
+from app.services.tts_service import tts_service
+from app.utils.enum_parser import parse_enum
 
 router = APIRouter()
 
@@ -20,14 +23,46 @@ async def voice_interview_endpoint(
     """WebSocket endpoint for voice-based interviews"""
     await websocket.accept()
     print(f"\n{'='*60}")
-    print(f"🎤 NEW CLIENT CONNECTED")
+    print("🎤 NEW CLIENT CONNECTED")
     print(f"   Role: {role}")
     print(f"   Experience: {experience}")
     print(f"{'='*60}\n")
     
     session_id = None
     
+    client_ip = websocket.client.host if websocket.client else "unknown"
+    
     try:
+        # Check rate limit
+        now = datetime.now()
+        rate_limit = await get_rate_limit(client_ip)
+        
+        usage_count = 0
+        reset_time = now + timedelta(days=3)
+        
+        if rate_limit:
+            if now > rate_limit.reset_time:
+                # Reset
+                usage_count = 0
+            else:
+                usage_count = rate_limit.usage_count
+                reset_time = rate_limit.reset_time
+        
+        if usage_count >= 3:
+            await websocket.send_json({
+                "type": "error",
+                "message": "Rate limit reached. You can only use the service 3 times per 3 days."
+            })
+            await websocket.close()
+            return
+            
+        # Increment and save
+        await save_rate_limit({
+            "ip_address": client_ip,
+            "usage_count": usage_count + 1,
+            "reset_time": reset_time
+        })
+
         # Parse and validate role and experience
         try:
             role_enum = parse_enum(RoleType, role)
@@ -35,7 +70,7 @@ async def voice_interview_endpoint(
         except ValueError as e:
             await websocket.send_json({
                 "type": "error",
-                "message": f"Invalid role or experience level: {str(e)}"
+                "message": f"Invalid role or experience level: {e!s}"
             })
             await websocket.close()
             return
@@ -236,8 +271,8 @@ async def voice_interview_endpoint(
     
     except Exception as e:
         print(f"\n{'='*60}")
-        print(f"❌ UNEXPECTED ERROR")
-        print(f"   Error: {str(e)}")
+        print("❌ UNEXPECTED ERROR")
+        print(f"   Error: {e!s}")
         if session_id:
             print(f"   Session: {session_id}")
         print(f"{'='*60}\n")

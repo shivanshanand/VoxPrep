@@ -1,5 +1,7 @@
 from cartesia import Cartesia
+
 from app.config import settings
+
 
 class TTSService:
     def __init__(self):
@@ -13,7 +15,7 @@ class TTSService:
         """Convert text to speech audio"""
         try:
             chunk_iter = self.client.tts.bytes(
-                model_id="sonic-english",
+                model_id="sonic-3.5",
                 transcript=text,
                 voice=self.voice_config,
                 output_format={

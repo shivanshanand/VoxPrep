@@ -1,6 +1,8 @@
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, PointStruct, VectorParams
+
 from app.config import settings
+
 
 class VectorService:
     def __init__(self):
