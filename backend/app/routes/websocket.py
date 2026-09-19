@@ -56,12 +56,6 @@ async def voice_interview_endpoint(
             await websocket.close()
             return
             
-        # Increment and save
-        await save_rate_limit({
-            "ip_address": client_ip,
-            "usage_count": usage_count + 1,
-            "reset_time": reset_time
-        })
 
         # Parse and validate role and experience
         try:
@@ -74,6 +68,13 @@ async def voice_interview_endpoint(
             })
             await websocket.close()
             return
+        
+        # Increment and save only after valid parameters
+        await save_rate_limit({
+            "ip_address": client_ip,
+            "usage_count": usage_count + 1,
+            "reset_time": reset_time
+        })
         
         # Create interview session
         session = interview_service.create_session(role_enum, exp_enum)

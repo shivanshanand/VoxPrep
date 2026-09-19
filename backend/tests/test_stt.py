@@ -6,7 +6,7 @@ def test_stt_from_file():
     print("🎤 Testing Speech-to-Text...")
     
     # Set API key
-    aai.settings.api_key = "settings.ASSEMBLYAI_API_KEY"
+    aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
     
     # You can use the file we generated from TTS test!
     audio_file = "test_output.wav"
@@ -37,7 +37,7 @@ def test_stt_realtime():
     print("🎤 Testing Real-time Speech-to-Text...")
     print("Speak into your microphone...")
     
-    aai.settings.api_key = "settings.ASSEMBLYAI_API_KEY"
+    aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
     
     def on_data(transcript: aai.RealtimeTranscript):
         if not transcript.text:

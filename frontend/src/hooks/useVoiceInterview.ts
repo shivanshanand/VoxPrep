@@ -23,6 +23,9 @@ export function useVoiceInterview(role: string, experience: string) {
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
       currentAudioRef.current.currentTime = 0;
+      if (currentAudioRef.current.src) {
+        URL.revokeObjectURL(currentAudioRef.current.src);
+      }
       currentAudioRef.current = null;
     }
   }, []);
@@ -83,6 +86,12 @@ export function useVoiceInterview(role: string, experience: string) {
         // Session started
       }
       
+      if (data.type === "error") {
+        setStatus(data.message || "An error occurred");
+        setInterviewEnded(true);
+        return;
+      }
+      
       if (data.type === "audio") {
         setIsRecording(false);
         setMessages(prev => [...prev, { text: data.text, isUser: false, phase: data.phase }]);
@@ -103,6 +112,7 @@ export function useVoiceInterview(role: string, experience: string) {
         currentAudioRef.current = audio;
         
         audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
           currentAudioRef.current = null;
           if (!interviewEnded) {
             setStatus("Ready - Click to speak");
@@ -156,6 +166,10 @@ export function useVoiceInterview(role: string, experience: string) {
   const endInterview = () => {
     if (interviewEnded) return;
     stopAudio();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "end" }));
     }
